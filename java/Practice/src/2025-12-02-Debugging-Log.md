@@ -39,6 +39,9 @@ String str = sc.nextLine();
 
   - \#Java, \#Scanner, \#next\_vs\_nextLine
 
+
+
+
 ## 2\. `for (N = 1 ; N <= 6 ; N++)`
 
 ### 1\. 발생한 문제
@@ -85,6 +88,10 @@ for (int i = 0; i < N; i++) {
 
   - \#Varialbe\_Scope \#Overwriting
 
+
+
+
+
 ## 3\. `System.out.println(sum+N);`
 
 ### 1\. 발생한 문제
@@ -124,7 +131,11 @@ System.out.println(sum);
 
 ### 4\. Insight
 
-  - 
+
+
+
+
+
 ## 4\. M으로 게속 나누기
 
 ### 1\. 발생한 문제
@@ -167,5 +178,3 @@ while(N != 0){
 ```
 
 -----
-
-작성해주신 디버깅 로그를 바탕으로 **변수 스코프(Scope)와 연산자 우선순위** 관련 추가 연습 문제를 생성해 드리는 것 가능
