@@ -7,17 +7,17 @@ public class Main {
         int gender = sc.nextInt();
         int age = sc.nextInt();
 
-        if (gender == 0) {        // 여성
-            if (age <= 19) {
-                System.out.println("GIRL");
-            } else {
+        if (gender == 0) {            // 여자
+            if (age >= 19) {
                 System.out.println("WOMAN");
-            }
-        } else {                  // 남성
-            if (age <= 19) {
-                System.out.println("BOY");
             } else {
+                System.out.println("GIRL");
+            }
+        } else {                      // 남자
+            if (age >= 19) {
                 System.out.println("MAN");
+            } else {
+                System.out.println("BOY");
             }
         }
     }
