@@ -1,0 +1,23 @@
+typin-java@0.0.0 C:\Users\user\Desktop\taja
+├── @types/react-dom@18.3.7
+├── @types/react-syntax-highlighter@15.5.13
+├── @types/react@18.3.27
+├── @typescript-eslint/eslint-plugin@7.18.0
+├── @typescript-eslint/parser@7.18.0
+├── @vitejs/plugin-react@4.7.0
+├── autoprefixer@10.4.23
+├── clsx@2.1.1
+├── eslint-plugin-react-hooks@4.6.2
+├── eslint-plugin-react-refresh@0.4.26
+├── eslint@8.57.1
+├── framer-motion@12.23.26
+├── postcss@8.5.6
+├── react-dom@18.3.1
+├── react-syntax-highlighter@15.6.6
+├── react@18.3.1
+├── tailwind-merge@3.4.0
+├── tailwindcss@3.4.19
+├── typescript@5.9.3
+├── vite@5.4.21
+└── zustand@4.5.7
+
