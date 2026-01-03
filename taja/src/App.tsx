@@ -12,15 +12,11 @@ interface LessonStats {
 
 const App = () => {
   // --- State Loading from LocalStorage ---
-  // localStorage를 "DB"로 사용하여 마지막 레슨과 뷰 모드를 기억합니다.
+  // 백엔드 API를 사용하여 마지막 레슨과 뷰 모드를 기억합니다.
   const [isNavOpen, setIsNavOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'typing' | 'concept'>(() => {
-    return (localStorage.getItem('taja-viewMode') as 'typing' | 'concept') || 'typing';
-  });
-  const [lesson, setLesson] = useState<Lesson>(() => {
-    const savedLessonId = localStorage.getItem('taja-lessonId');
-    return lessons.find(l => l.id === savedLessonId) || lessons[0];
-  });
+  const [viewMode, setViewMode] = useState<'typing' | 'concept'>('typing');
+  const [lesson, setLesson] = useState<Lesson>(lessons[0]);
+  const [isLoading, setIsLoading] = useState(true); // 데이터 로딩 상태 추가
 
   const currentConcept = useMemo(() => {
     const conceptId = `concept-${lesson.id}`;
@@ -41,46 +37,71 @@ const App = () => {
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // --- State Saving to LocalStorage ---
-  // 앱이 처음 로드될 때 저장된 타이핑 내용을 복원합니다.
+  // --- State Loading from Backend ---
+  // 앱이 처음 로드될 때 서버에서 상태를 복원합니다.
   useEffect(() => {
-    const savedTyped = localStorage.getItem('taja-typed');
-    if (savedTyped) {
-      actions.handleTyped(savedTyped);
-    }
-    // 이 effect는 마운트 시 한 번만 실행되어야 합니다.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const loadProgress = async () => {
+      try {
+        const res = await fetch('http://localhost:8080/api/progress');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.lastLessonId) {
+            const savedLesson = lessons.find(l => l.id === data.lastLessonId);
+            if (savedLesson) setLesson(savedLesson);
+          }
+          if (data.viewMode) setViewMode(data.viewMode as 'typing' | 'concept');
+          if (data.typedContent) actions.handleTyped(data.typedContent);
+        }
+      } catch (error) {
+        console.error("Failed to load progress from backend", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadProgress();
   }, []);
 
-  // 현재 진행 상황(레슨, 뷰모드, 입력내용)을 localStorage에 저장합니다.
+  // 현재 진행 상황(레슨, 뷰모드, 입력내용)을 서버에 저장합니다.
   useEffect(() => {
-    localStorage.setItem('taja-lessonId', lesson.id);
-    localStorage.setItem('taja-viewMode', viewMode);
-    if (status !== 'finished') {
-      localStorage.setItem('taja-typed', typed);
-    } else {
-      localStorage.removeItem('taja-typed'); // 완료되면 저장된 내용 삭제
-    }
-  }, [lesson.id, viewMode, typed, status]);
+    if (isLoading) return;
+
+    const saveProgress = async () => {
+      try {
+        await fetch('http://localhost:8080/api/progress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            lastLessonId: lesson.id,
+            viewMode: viewMode,
+            typedContent: status !== 'finished' ? typed : ''
+          })
+        });
+      } catch (error) {
+        console.error("Failed to save progress", error);
+      }
+    };
+    
+    // 너무 잦은 요청을 방지하기 위해 디바운스 처리 등을 고려할 수 있습니다.
+    const timeoutId = setTimeout(saveProgress, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [lesson.id, viewMode, typed, status, isLoading]);
 
   // 자동 포커스 처리
   useEffect(() => {
-    if (status !== 'finished') {
+    if (!isLoading && status !== 'finished') {
       inputRef.current?.focus();
     }
-  }, [status, textToType]);
+  }, [status, textToType, isLoading]);
   
-  // 로컬 스토리지에서 통계 데이터 로드
+  // 서버에서 통계 데이터 로드
   useEffect(() => {
-    const statsKey = `taja-lessonStats_${lesson.id}_${viewMode}`; // 모드별 통계 저장
-    try {
-      const storedStats = localStorage.getItem(statsKey);
-      if (storedStats) setLessonStats(JSON.parse(storedStats));
-      else setLessonStats({ history: [], bestWpm: 0 });
-    } catch (e) {
-      setLessonStats({ history: [], bestWpm: 0 });
-    }
-  }, [lesson, viewMode]);
+    if (isLoading) return;
+    
+    fetch(`http://localhost:8080/api/stats?lessonId=${lesson.id}&viewMode=${viewMode}`)
+      .then(res => res.json())
+      .then(data => setLessonStats(data))
+      .catch(() => setLessonStats({ history: [], bestWpm: 0 }));
+  }, [lesson, viewMode, isLoading]);
 
   // 완료 시 통계 업데이트
   useEffect(() => {
@@ -89,7 +110,17 @@ const App = () => {
         const newHistory = [...prevStats.history, wpm];
         const newBestWpm = Math.max(prevStats.bestWpm, wpm);
         const newStats = { history: newHistory, bestWpm: newBestWpm };
-        localStorage.setItem(`taja-lessonStats_${lesson.id}_${viewMode}`, JSON.stringify(newStats));
+        
+        fetch('http://localhost:8080/api/stats', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            lessonId: lesson.id,
+            viewMode: viewMode,
+            ...newStats
+          })
+        });
+        
         return newStats;
       });
     }
@@ -117,6 +148,10 @@ const App = () => {
 
   const isFinished = status === "finished";
   const progress = cursor > 0 ? (cursor / textToType.length) * 100 : 0;
+
+  if (isLoading) {
+    return <div className="min-h-screen bg-vscode-bg text-dracula-fg flex items-center justify-center">Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-vscode-bg text-dracula-fg font-mono" onClick={() => inputRef.current?.focus()}>
