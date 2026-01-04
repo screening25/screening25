@@ -1,0 +1,44 @@
+// Main container for the search functionality
+.searchBar {
+  display: flex;                    // Align search bar and adjacent elements horizontally
+  align-items: center;              // Vertically center elements within the container
+  gap: 20px;                        // Space between the search bar and other items
+
+  // Search box wrapper (contains the input and likely an icon)
+  &__search {
+    display: flex;                  // Use flexbox for internal icon and input alignment
+    align-items: center;            // Vertically center the icon and input field
+    justify-content: flex-start;    // Align items to the left side
+
+    width: 50vw;                    // Occupy 50% of the viewport width
+    padding: 14px;                  // Internal spacing for the search box
+    gap: 16px;                      // Space between the icon and the text input
+
+    border-radius: 8px;             // Rounded corners for the box
+    border: 1px solid $color-gray-300; // Subtle border using global variable
+    background-color: $color-white-000; // White background for the input area
+    box-shadow: 0px 2px 8px 8px rgba(228, 231, 236, 0.7); // Outer depth shadow
+
+    // Active state styling when the input field inside is focused
+    &:focus-within {
+      border: 1px solid #2e90fa;    // Change border to blue on focus
+      box-shadow: 0px 0px 8px 8px rgba(21, 112, 239, 0.3); // Apply a blue glow effect
+
+      // Targeted change for the input text color when active
+      .searchBar__search__input {
+        color: $color-gray-800;     // Darker text for better focus visibility
+      }
+    }
+
+    // The actual HTML input element
+    &__input {
+      outline: none;                // Remove default browser focus outline
+      border: none;                 // Remove default input border (container handles it)
+      width: 100%;                  // Allow the input to take up all available space
+      font-size: 17px;              // Size of the text inside the input
+      font-weight: 500;             // Medium weight for the input text
+      line-height: 17px;            // Set line-height to match font-size
+      color: $color-gray-500;       // Default text/placeholder color
+    }
+  }
+}

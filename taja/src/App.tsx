@@ -4,6 +4,7 @@ import { useEngine } from "./hooks/useEngine";
 import Stats from "./components/Stats";
 import RestartButton from "./components/RestartButton";
 import TypingArea from "./components/TypingArea";
+import { useTypingStats } from "./hooks/useTypingStats";
 
 interface LessonStats {
   history: number[];
@@ -32,10 +33,15 @@ const App = () => {
 
   // WPM, 정확도 등 타이핑 관련 계산은 useEngine 훅에서 처리됩니다.
   const { state, actions } = useEngine(textToType);
-  const { status, wpm, accuracy, typed, cursor } = state;
+  const { status, typed, cursor } = state;
+  const { wpm, accuracy } = useTypingStats(typed, textToType, status);
   const [lessonStats, setLessonStats] = useState<LessonStats>({ history: [], bestWpm: 0 });
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    document.title = "Typin' Code ⌨️";
+  }, []);
 
   // --- State Loading from Backend ---
   // 앱이 처음 로드될 때 서버에서 상태를 복원합니다.
@@ -206,7 +212,7 @@ const App = () => {
       <main className="flex flex-col items-center p-8">
         <div className="w-full max-w-5xl mx-auto flex flex-col gap-8">
           <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-dracula-purple">Typin' Java</h1>
+            <h1 className="text-3xl font-bold text-dracula-purple">Typin' Code ⌨️</h1>
             <button onClick={() => setIsNavOpen(true)} className="px-4 py-2 bg-dracula-purple text-white rounded-md hover:bg-opacity-80">
               Select Lesson
             </button>
