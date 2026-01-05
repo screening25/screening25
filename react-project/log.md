@@ -1,4 +1,99 @@
 # React 프로젝트 기술 명세서
+**작성 일자: 2026년 1월 5일**
+
+## 1. React Hook: `useEffect`
+- **정의**: 컴포넌트의 렌더링 결과가 화면에 반영된 이후 특정 작업(Side Effect)을 수행하게 하는 Hook
+- **상세 설명**:
+    - 데이터 가져오기(fetching), 구독(subscription), 수동 DOM 조작 등의 작업을 처리하는 데 사용
+    - `useEffect(callback, dependencyArray)` 형태로 사용하며, 의존성 배열(`dependencyArray`)에 따라 실행 시점이 결정
+- **주요 특징**:
+    - **빈 의존성 배열 `[]`**: 컴포넌트가 처음 마운트될 때 한 번만 실행
+    - **의존성 배열 생략**: 리렌더링될 때마다 실행
+    - **의존성 배열에 특정 값 `[dep]`**: 해당 값이 변경될 때만 실행
+- **프로젝트 내 사용 예시**: `src/pages/index/Index.tsx`에서 첫 렌더링 시 `getData()` 함수를 호출하기 위해 사용
+
+## 2. 비동기 처리
+### 2.1. `axios`
+- **정의**: Promise 기반의 HTTP 클라이언트 라이브러리
+- **상세 설명**: `GET`, `POST` 등 다양한 HTTP 요청을 간결한 API로 지원하며, 요청/응답 데이터의 자동 변환 등 편의 기능 제공
+- **프로젝트 내 사용 예시**: `src/pages/index/Index.tsx`에서 GitHub Gist API에 `GET` 요청을 보내 데이터를 가져오는 데 사용
+
+### 2.2. `async / await`
+- **정의**: Promise 기반의 비동기 코드를 동기 코드처럼 보이게 하여 가독성을 높이는 JavaScript 문법
+- **상세 설명**: `async` 함수 내에서 `await` 키워드를 사용하여 Promise가 처리될 때까지 실행을 일시 중지하고 결과를 반환
+- **프로젝트 내 사용 예시**: `src/pages/index/Index.tsx`에서 `axios.get`의 응답을 기다려 순차적으로 로직을 실행하기 위해 사용
+
+## 3. TypeScript 및 데이터 관리
+### 3.1. DTO (Data Transfer Object)
+- **정의**: 서버 데이터를 프론트엔드 UI 구조에 맞게 정의한 객체 설계도
+- **상세 설명**: `interface`나 `type`으로 API 응답 데이터 중 필요한 속성만 선별하여 구조화
+- **프로젝트 내 사용 예시**: `src/pages/index/types/Cards.ts`에 `CardDTO` 인터페이스를 정의하여 API 응답 형태를 명시
+
+### 3.2. Props
+- **정의**: 부모 컴포넌트에서 자식 컴포넌트로 데이터를 전달하기 위한 읽기 전용 객체
+- **프로젝트 내 사용 예시**: `src/pages/index/components/Card.tsx`가 부모인 `Index` 페이지로부터 `data` Prop을 전달받음
+
+### 3.3. `import type`
+- **정의**: TypeScript에서 타입 정보만을 가져오기 위한 구문
+- **상세 설명**: 컴파일 시 코드에서 완전히 제거되어 번들 크기를 최적화하고 불필요한 모듈 의존성을 줄임
+- **프로젝트 내 사용 예시**: `src/pages/index/Index.tsx`에서 `CardDTO` 타입을 가져올 때 사용
+
+### 3.4. 옵셔널 체이닝 (`?.`)
+- **정의**: 객체 속성 접근 시, 중간 경로가 `null` 또는 `undefined`일 경우 에러 대신 `undefined`를 반환하는 연산자
+- **프로젝트 내 사용 예시**: `src/pages/index/components/Card.tsx`에서 `data.tags` 배열 존재 여부를 확인하며 안전하게 접근
+
+## 4. 기타
+### 4.1. 환경 변수
+- **정의**: API 키 등 코드 외부에서 주입되는 동적인 설정 값
+- **상세 설명**: Vite 기반 프로젝트에서는 `.env` 파일에 `VITE_` 접두사로 변수를 정의하고 `import.meta.env.VITE_변수명`으로 접근
+- **프로젝트 내 사용 예시**: `src/pages/index/Index.tsx`에서 GitHub API 토큰을 안전하게 관리하기 위해 사용
+
+### 4.2. `toLocaleString()`
+- **정의**: 숫자를 지역 형식에 맞는 문자열로 변환하는 JavaScript 내장 메서드
+- **프로젝트 내 사용 예시**: `src/pages/index/components/Card.tsx`에서 숫자를 천 단위 콤마 형식으로 변환
+
+---
+## 부록: '공부' 주석 원본 (2026년 1월 5일 신규)
+
+### `useEffect`
+- `// [공부] 의존성 배열([])이 비어있는 경우, 컴포넌트가 화면에 나타난 직후 '최초 1회'만 실행`
+  - `src/pages/index/Index.tsx`
+
+### `axios`
+- `import axios from 'axios' // [공부] axios: Promise 기반의 HTTP 비동기 통신 라이브러리`
+  - `src/pages/index/Index.tsx`
+
+### `async / await`
+- `const getData = async () => { // [공부] async/await: 비동기 작업의 순서를 보장하고 가독성을 높이는 문법`
+  - `src/pages/index/Index.tsx`
+
+### DTO (Data Transfer Object)
+- `// [공부] DTO: 서버 데이터를 화면 구조에 맞게 정의한 객체 설계도`
+  - `src/pages/index/types/Cards.ts`
+
+### Props
+- `data: CardDTO // [공부] Props: 부모(Index)에게서 전달받은 읽기 전용 데이터`
+  - `src/pages/index/components/Card.tsx`
+
+### `import type`
+- `// [공부] import type: 컴파일 시점에만 사용되는 형식 정보를 명시하여 빌드 효율 최적화 및 ts(1484) 에러 방지`
+  - `src/pages/index/Index.tsx`
+
+### 옵셔널 체이닝 (`?.`)
+- `// [공부] 옵셔널 체이닝(?): 데이터 경로가 깊을 때 발생할 수 있는 참조 에러 방지`
+  - `src/pages/index/components/Card.tsx`
+
+### 환경 변수
+- `const TOKEN = import.meta.env.VITE_GITHUB_TOKEN // [공부] 환경 변수: 보안 토큰 등 민감 정보를 .env 파일로 격리하여 관리`
+  - `src/pages/index/Index.tsx`
+
+### `toLocaleString()`
+- `{/* [공부] toLocaleString(): 숫자를 천 단위 콤마 형식 문자열로 변환 */}`
+  - `src/pages/index/components/Card.tsx`
+
+---
+
+# React 프로젝트 기술 명세서
 **작성 일자: 2026년 1월 4일**
 
 ## 1. React 기본 요소
@@ -164,38 +259,3 @@
 ### CSS Modules
 - `// [공부] CSS Modules: 스타일 충돌 방지를 위해 클래스명을 고유값으로 변환하여 적용`
   - `src/components/common/navigation/CommonNav.tsx`
-
----
-
-# 매일 학습 내용 정리를 위한 프롬프트
-
-현재 React 프로젝트의 내용을 바탕으로, 아래의 모든 요구사항을 **반드시** 준수하여 `log.md` 학습 로그 파일을 생성 및 업데이트해줘
-
-**[기본 수행 작업]**
-1.  프로젝트 전체에서 '공부'라는 키워드가 포함된 주석을 모두 검색
-2.  오늘 날짜를 기준으로, 해당 주석 내용에서 학습한 모든 React 및 관련 웹 기술 개념을 정리
-
-**[콘텐츠 요구사항]**
-1.  **문서 제목**: `# React 프로젝트 기술 명세서`로 설정.
-2.  **작성 일자**: 문서 제목 바로 아래에 `**작성 일자: YYYY년 MM월 DD일**` 형식으로 오늘 날짜를 명시
-3.  **내용 구성**:
-    -   React를 처음 배우는 사람을 기준으로, 가장 기초적인 개념(예: 컴포넌트, JSX)부터 시작하여 주석에서 유추할 수 있는 모든 기술 개념을 체계적으로 설명
-    -   각 개념은 '정의', '상세 설명', '주요 특징', '프로젝트 내 사용 예시' 등의 항목으로 명확하게 구분하여 기술
-4.  **부록**:
-    -   문서 마지막에 `## 부록: '공부' 주석 원본 (개념별)` 섹션을 추가
-    -   이 섹션에서는 찾은 '공부' 주석 원본을 각 개념별로 분류
-    -   각 항목의 형식은 아래 예시를 정확히 따를 것:
-        ```
-        ### [개념 이름]
-        - `[주석 내용 원본]`
-          - `[주석이 위치한 파일 경로]`
-        ```
-
-**[스타일 및 어조 요구사항]**
-1.  **전체 톤**: 개인적인 의견이나 대화체 없이, 건조하고 객관적인 기술 명세서 스타일을 유지
-2.  **문장 종결**: 문장 끝에 `.`(마침표)를 절대로 사용하지 말 것
-3.  **서술어 형식**: 문장 끝을 `-함`, `-임`과 같은 명사형 종결 어미로 끝내지 말 것. (예: "구축함" -> "구축")
-4.  **반드시 지켜야 하는 사항**: 다른 날짜에 작성된 것들은 건드리지 않을 것 
-
-**[AI 에이전트 응답 관련]**
--   이 프롬프트를 처리하는 과정에서의 너의 모든 답변은 반드시 격식 있고 중립적인 톤을 유지할 것

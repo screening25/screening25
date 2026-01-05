@@ -3,7 +3,7 @@ import styles from './CommonHeader.module.scss'; // 스타일: CSS Module을 활
 function CommonHeader() {
     return (
         // [공부] BEM 패턴: header__logoBox와 같은 명명 규칙을 통한 클래스 구조화
-        <div className={styles.header}>
+        <header className={styles.header}>
             {/* 로고 영역: 이미지와 서비스 타이틀로 구성 */}
             <div className={styles.header__logoBox}>
                 <img src="src/assets/images/image-logo.png" alt="" className={styles.header__logoBox__logo} />
@@ -20,7 +20,7 @@ function CommonHeader() {
                     I'm Screening | https://github.com/screening25
                 </button>
             </div>
-        </div>
+        </header>
     );
 }
 
