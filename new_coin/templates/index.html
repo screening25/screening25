@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ko" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aegis V50 Nexus - 실시간 전략 대시보드</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        :root {
+            --positive: #ff4444; /* 한국식 상승: 빨강 */
+            --negative: #4488ff; /* 한국식 하락: 파랑 */
+        }
+
+        [data-bs-theme="dark"] {
+            --bs-body-bg: #0f121a;
+            --card-bg: #1a1f2b;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        [data-bs-theme="light"] {
+            --bs-body-bg: #f4f7fa;
+            --card-bg: #ffffff;
+            --border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        body { font-family: 'Poppins', 'Pretendard', sans-serif; transition: 0.3s; }
+        .card { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; }
+        
+        .metric-title { font-size: 0.8rem; color: #8a92a5; font-weight: 600; text-transform: uppercase; }
+        .metric-value { font-size: 1.6rem; font-weight: 700; letter-spacing: -1px; }
+
+        .positive { color: var(--positive) !important; }
+        .negative { color: var(--negative) !important; }
+
+        .log-box {
+            height: 200px; background-color: rgba(0,0,0,0.05);
+            border-radius: 8px; padding: 12px; font-family: 'Roboto Mono', monospace;
+            font-size: 0.8rem; overflow-y: auto;
+        }
+
+        /* 깜빡임 애니메이션 */
+        @keyframes flash-up { 0% { background-color: rgba(255, 68, 68, 0.2); } 100% { background-color: transparent; } }
+        @keyframes flash-down { 0% { background-color: rgba(68, 136, 255, 0.2); } 100% { background-color: transparent; } }
+        .up-change { animation: flash-up 0.8s ease-out; }
+        .down-change { animation: flash-down 0.8s ease-out; }
+
+        .theme-switch { cursor: pointer; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border-color); }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg border-bottom shadow-sm mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#"><i class="bi bi-shield-fill-check text-primary"></i> AEGIS V50</a>
+            <div class="ms-auto d-flex align-items-center">
+                <div id="themeToggle" class="theme-switch me-3">
+                    <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+                </div>
+                <button class="btn btn-sm btn-outline-secondary" onclick="location.reload()">
+                    <i class="bi bi-arrow-clockwise"></i> 새로고침
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <section class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card p-3 shadow-sm h-100">
+                    <div class="metric-title">내 보유자산 (총 평가)</div>
+                    <div class="metric-value text-primary" id="total-eval">0원</div>
+                    <div class="mt-2 small text-muted">보유 원화: <span id="held-krw">0</span>원</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-3 shadow-sm h-100">
+                    <div class="metric-title">총 평가 손익</div>
+                    <div class="metric-value" id="total-pnl-krw">0원</div>
+                    <div class="fw-bold fs-5" id="total-pnl-percent">0.00%</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-3 shadow-sm h-100">
+                    <div class="metric-title">주문 현황</div>
+                    <div class="mt-1">
+                        <small class="text-muted">총 매수:</small> <span id="total-buy">0</span>원<br>
+                        <small class="text-muted">주문 가능:</small> <span class="text-info fw-bold" id="available-order">0</span>원
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-3 shadow-sm h-100 text-center">
+                    <div class="metric-title">시스템 지표</div>
+                    <div class="metric-value"><span id="active-slots">0</span> / 4</div>
+                    <div class="small text-muted">PF: <span id="profit-factor">0.00</span> | MDD: <span id="mdd">0.00</span>%</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="row g-4">
+            <div class="col-lg-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-transparent py-3 border-0">
+                        <h6 class="fw-bold mb-0"><i class="bi bi-activity text-danger me-2"></i> 실시간 운용 포지션</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table align-middle">
+                                <thead class="small text-muted">
+                                    <tr>
+                                        <th>종목(수량)</th>
+                                        <th>매수 평균가</th>
+                                        <th>현재 가격</th>
+                                        <th>평가금액(투자금)</th>
+                                        <th>손절/익절가</th>
+                                        <th>수익 (KRW)</th>
+                                        <th class="text-end">수익률</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="positions-table"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-transparent border-0 pt-3">
+                        <h6 class="fw-bold mb-0"><i class="bi bi-clock-history me-2"></i> 최근 거래 내역</h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="trade-history" class="small"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-transparent border-0 pt-3">
+                        <h6 class="fw-bold mb-0"><i class="bi bi-terminal me-2"></i> 시스템 로그</h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="log-box" class="log-box"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const currencyFormatter = new Intl.NumberFormat('ko-KR');
+        let prevPnl = {};
+
+        // 테마 토글
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        themeToggle.onclick = () => {
+            const current = document.documentElement.getAttribute('data-bs-theme');
+            const target = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-bs-theme', target);
+            themeIcon.className = target === 'dark' ? 'bi bi-moon-stars-fill' : 'bi bi-sun-fill';
+            localStorage.setItem('aegis-theme', target);
+        };
+
+        function updateUI(data) {
+            const perf = data.performance || {};
+
+            // 1. 상단 자산 지표 업데이트
+            document.getElementById('total-eval').innerText = currencyFormatter.format(Math.floor(perf.total_eval || 0)) + '원';
+            document.getElementById('held-krw').innerText = currencyFormatter.format(Math.floor(perf.held_krw || 0));
+            document.getElementById('total-buy').innerText = currencyFormatter.format(Math.floor(perf.total_buy || 0));
+            document.getElementById('available-order').innerText = currencyFormatter.format(Math.floor(perf.available_krw || 0));
+
+            const totalPnlKrw = Math.floor(perf.total_pnl_krw || 0);
+            const totalPnlPercent = (perf.total_pnl_percent || 0);
+            const pnlClass = totalPnlKrw >= 0 ? 'positive' : 'negative';
+
+            document.getElementById('total-pnl-krw').innerText = currencyFormatter.format(totalPnlKrw) + '원';
+            document.getElementById('total-pnl-krw').className = 'metric-value ' + pnlClass;
+            document.getElementById('total-pnl-percent').innerText = totalPnlPercent.toFixed(2) + '%';
+            document.getElementById('total-pnl-percent').className = 'fw-bold fs-5 ' + pnlClass;
+
+            // 2. 시스템 상태 업데이트
+            document.getElementById('active-slots').innerText = data.positions.length;
+            document.getElementById('profit-factor').innerText = perf.profit_factor || '0.00';
+            document.getElementById('mdd').innerText = (perf.mdd || 0).toFixed(2);
+
+            // 3. 로그 업데이트
+            const logBox = document.getElementById('log-box');
+            logBox.innerHTML = data.logs.map(l => `<div>${l}</div>`).join('');
+            logBox.scrollTop = logBox.scrollHeight;
+
+            // 4. 포지션 테이블 업데이트 (매수 평균가, 평가금, 투자금 상세 포함)
+            const table = document.getElementById('positions-table');
+            if (data.positions.length === 0) {
+                table.innerHTML = '<tr><td colspan="7" class="text-center py-5 text-muted small">현재 보유 중인 포지션이 없습니다.</td></tr>';
+            } else {
+                let html = '';
+                data.positions.forEach(pos => {
+                    const pnlClass = pos.pnl_percent >= 0 ? 'positive' : 'negative';
+                    const oldPrice = prevPnl[pos.ticker] || pos.current_price;
+                    const changeClass = pos.current_price > oldPrice ? 'up-change' : (pos.current_price < oldPrice ? 'down-change' : '');
+                    prevPnl[pos.ticker] = pos.current_price;
+
+                    html += `
+                        <tr class="${changeClass}">
+                            <td>
+                                <span class="fw-bold text-primary">${pos.ticker}</span><br>
+                                <small class="text-muted" style="font-size: 0.7rem;">수량: ${pos.amount.toFixed(4)}</small>
+                            </td>
+                            <td>${currencyFormatter.format(pos.entry_price)}</td>
+                            <td class="fw-bold">${currencyFormatter.format(pos.current_price)}</td>
+                            <td>
+                                <span class="fw-bold">${currencyFormatter.format(pos.eval_amount || (pos.current_price * pos.amount))}</span>원<br>
+                                <small class="text-muted" style="font-size: 0.7rem;">투자: ${currencyFormatter.format(pos.invested_amount || (pos.entry_price * pos.amount))}원</small>
+                            </td>
+                            <td class="small">
+                                <span class="text-warning">L: ${currencyFormatter.format(pos.stop_loss_price)}</span><br>
+                                <span class="text-success">T: ${pos.trailing_stop_price > 0 ? currencyFormatter.format(pos.trailing_stop_price) : '--'}</span>
+                            </td>
+                            <td class="${pnlClass}">${currencyFormatter.format(pos.pnl_krw)}</td>
+                            <td class="text-end ${pnlClass} fw-bold fs-5">${pos.pnl_percent.toFixed(2)}%</td>
+                        </tr>
+                    `;
+                });
+                table.innerHTML = html;
+            }
+        }
+
+        async function fetchData() {
+            try {
+                const res = await fetch('/data');
+                const data = await res.json();
+                updateUI(data);
+            } catch (e) { console.error("Data Fetch Error", e); }
+        }
+
+        window.onload = () => {
+            const saved = localStorage.getItem('aegis-theme') || 'dark';
+            document.documentElement.setAttribute('data-bs-theme', saved);
+            themeIcon.className = saved === 'dark' ? 'bi bi-moon-stars-fill' : 'bi bi-sun-fill';
+            fetchData();
+            setInterval(fetchData, 3000); // 1초 주기로 데이터 갱신
+        };
+    </script>
+</body>
+</html>
