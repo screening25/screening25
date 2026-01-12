@@ -25,7 +25,7 @@ Node.js는 단순한 상호작용에 그쳤던 자바스크립트를 **범용적
 
 # Node.js 사용하기
 
-프로그래밍에서 특정 목적을 갖는 프로그램을 만들 때 '프로젝트'라는 단위를 사용하듯, Node.js 환경에서는 **패키지(Package)**라는 단위로 프로그램을 구성한다.
+프로그래밍에서 특정 목적을 갖는 프로그램을 만들 때 '프로젝트'라는 단위를 사용하듯, Node.js 환경에서는 **패키지(Package)** 라는 단위로 프로그램을 구성한다.
 
 ## 1. 패키지 생성 및 초기화
 1.  **루트 폴더 생성**: 예) `section01`
@@ -63,10 +63,10 @@ Node.js는 단순한 상호작용에 그쳤던 자바스크립트를 **범용적
 
 ## 모듈이란?
 쇼핑몰을 개발한다고 가정해 보자. 회원 가입, 장바구니, 결제 등 다양한 기능이 필요하다. 이 모든 기능을 하나의 파일에 작성하면 관리가 어렵고 효율이 떨어진다.
-따라서 기능별로 파일(`user.js`, `cart.js`, `payment.js`)을 나누어 관리하는데, 이렇게 분리된 각각의 자바스크립트 파일을 **모듈(Module)**이라고 한다.
+따라서 기능별로 파일(`user.js`, `cart.js`, `payment.js`)을 나누어 관리하는데, 이렇게 분리된 각각의 자바스크립트 파일을 **모듈(Module)** 이라고 한다.
 
 ## 모듈 시스템의 종류
-모듈을 생성하고, 불러오고, 사용하는 기능을 제공하는 시스템이다. 자바스크립트의 대표적인 모듈 시스템으로는 **CommonJS(CJS)**와 **ES Module(ESM)**이 있다.
+모듈을 생성하고, 불러오고, 사용하는 기능을 제공하는 시스템이다. 자바스크립트의 대표적인 모듈 시스템으로는 **CommonJS(CJS)** 와 **ES Module(ESM)** 이 있다.
 
 ### 1. CJS (CommonJS)
 Node.js의 기본 모듈 시스템이다.
@@ -140,7 +140,47 @@ console.log(multiply(5, 3)); // 15
 
 > **참고**: `export default`는 모듈당 **하나만** 존재할 수 있다. 만약 여러 개를 `default`로 내보내려고 하면 문법 에러(SyntaxError)가 발생한다. 여러 값을 내보내야 한다면 `export { a, b }` 형태의 Named Export를 사용해야 한다.
 
+---
 
---- 
-# 라이브러리 
-프로그램을 개발할 때 필요한 다양한 기능들을 미리 만들어 모듈화 해 놓은 것 
+# 라이브러리 (Library)
+
+프로그램을 개발할 때 필요한 다양한 기능들을 미리 만들어 모듈화해 놓은 것이다.
+
+## 1. 라이브러리 검색 및 설치
+**NPM (Node Package Manager)**은 Node.js의 라이브러리들이 등록되어 있는 저장소다.
+*   [npmjs.com](https://www.npmjs.com)에서 필요한 라이브러리를 검색할 수 있다.
+*   **설치 명령어**:
+    ```bash
+    npm install randomcolor
+    ```
+
+## 2. package.json과 의존성
+라이브러리를 설치하면 `package.json` 파일의 `dependencies` 항목에 추가된다.
+
+```json
+"dependencies": {
+  "randomcolor": "^0.6.2"
+}
+```
+
+### package-lock.json
+*   `package.json`은 버전의 범위(Range)를 명시하지만, `package-lock.json`은 실제로 설치된 **정확한 버전 정보**를 저장한다.
+*   협업 시 팀원 간에 동일한 버전의 라이브러리를 사용하도록 보장해 준다.
+
+## 3. node_modules 폴더
+*   설치된 라이브러리 파일들이 실제로 저장되는 공간이다.
+*   용량이 매우 크기 때문에 Git과 같은 버전 관리 시스템에 올리지 않는다 (공유하지 않음).
+*   `package.json`에 의존성 정보가 명시되어 있으므로, 언제든지 다음 명령어로 다시 다운로드할 수 있다.
+    ```bash
+    npm install
+    # 또는 npm i
+    ```
+
+## 4. 라이브러리 사용 예시 (randomcolor)
+
+```javascript
+import randomColor from 'randomcolor'; // 라이브러리 이름으로 불러오기
+
+const color = randomColor();
+console.log(color); // 예: #ead89d (무작위 색상 출력)
+```
