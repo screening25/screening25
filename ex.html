@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS Curation - Infinite Layer Deck</title>
+    <style>
+        :root {
+            --bg-color: #0d0d0d;
+            --pink: #ff4d94;
+            --yellow: #f0e68c;
+            --blue-light: #4db8ff;
+            --blue-dark: #3366ff;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: white;
+            margin: 0;
+            font-family: 'Pretendard', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .header {
+            padding: 50px 80px;
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            z-index: 10000;
+            background-color: var(--bg-color);
+        }
+
+        .logo { font-size: 38px; font-weight: 800; }
+        .logo span { font-size: 15px; font-weight: 400; margin-left: 8px; opacity: 0.6; }
+
+        .slider-viewport {
+            height: 70vh;
+            display: flex;
+            align-items: center;
+            overflow: visible;
+            perspective: 2500px;
+            padding-left: 100px;
+        }
+
+        .slider-track {
+            display: flex;
+            /* 무한 스크롤 애니메이션 정의 */
+            animation: infiniteScroll 40s linear infinite;
+            width: max-content;
+        }
+
+        .card {
+            width: 400px;
+            height: 250px;
+            padding: 30px;
+            border-radius: 18px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-end;
+            text-align: right;
+            cursor: pointer;
+            flex-shrink: 0;
+            margin-right: -240px; 
+            transform: rotateY(-35deg) rotateX(10deg) skewY(5deg);
+            box-shadow: 10px 10px 30px rgba(0, 0, 0, 0.5);
+            transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), filter 0.3s;
+            position: relative;
+        }
+
+        /* 호버 시 층위 유지하며 수직 상승 */
+        .card:hover {
+            transform: rotateY(-35deg) rotateX(10deg) skewY(5deg) translateY(-140px);
+            filter: brightness(1.2);
+            box-shadow: 20px 60px 80px rgba(0, 0, 0, 0.8);
+        }
+
+        .card .title { font-size: 26px; font-weight: 800; line-height: 1.2; margin-bottom: 12px; }
+        .card .category { font-size: 12px; font-weight: 600; opacity: 0.9; padding: 5px 10px; background: rgba(0,0,0,0.15); border-radius: 6px; }
+
+        .card:nth-child(4n+1) { background-color: var(--pink); color: white; }
+        .card:nth-child(4n+2) { background-color: var(--yellow); color: black; }
+        .card:nth-child(4n+3) { background-color: var(--blue-light); color: black; }
+        .card:nth-child(4n+4) { background-color: var(--blue-dark); color: white; }
+
+        #modalOverlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(25px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 20000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        #modalOverlay.active { display: flex; opacity: 1; }
+        .modal-window { width: 85%; max-width: 650px; padding: 60px; border-radius: 35px; transform: scale(0.8) translateY(30px); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        #modalOverlay.active .modal-window { transform: scale(1) translateY(0); }
+        .close-btn { position: absolute; top: 25px; right: 35px; font-size: 45px; cursor: pointer; opacity: 0.4; }
+
+        /* 무한 스크롤 애니메이션: 트랙의 절반 지점(-50%)까지 이동 후 초기화 */
+        @keyframes infiniteScroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .slider-viewport:hover .slider-track { animation-play-state: paused; }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="logo">CS Curation <span>Infinite Deck</span></div>
+    </header>
+
+    <div class="slider-viewport">
+        <div class="slider-track" id="sliderTrack"></div>
+    </div>
+
+    <div id="modalOverlay">
+        <div class="modal-window" id="modalWindow">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <div class="modal-body">
+                <small id="mCategory" style="font-weight: 700; text-transform: uppercase; letter-spacing: 2px;"></small>
+                <h1 id="mTitle" style="font-size: 40px; margin: 15px 0 25px 0;"></h1>
+                <p id="mDesc" style="font-size: 20px; line-height: 1.8; opacity: 0.9;"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const csData = [
+            { title: "운영체제:\n뮤텍스 vs 세마포어", category: "OS", desc: "공유 자원에 대한 동시 접근을 제어하는 기법입니다. 뮤텍스는 단일 프로세스의 소유권을 강조하고, 세마포어는 허용 가능한 프로세스 개수를 관리합니다." },
+            { title: "네트워크:\n쿠키와 세션의 차이", category: "Network", desc: "클라이언트와 서버 중 어디에 데이터를 저장하느냐가 핵심입니다. 세션은 서버에서 관리되어 보안성이 높지만 자원을 더 많이 소모합니다." },
+            { title: "데이터베이스:\nSQL vs NoSQL", category: "Database", desc: "엄격한 스키마가 필요한 관계형 DB와 유연한 확장이 필요한 비관계형 DB의 차이입니다. 서비스의 데이터 특성에 맞춰 선택해야 합니다." },
+            { title: "알고리즘:\n정렬의 시간복잡도", category: "Algorithm", desc: "Bubble, Quick, Merge Sort 등 각 정렬 방식이 가지는 시간적 효율성을 비교합니다. 평균적으로 O(N log N)이 가장 효율적인 범용 알고리즘입니다." },
+            { title: "자료구조:\n스택과 큐 (LIFO/FIFO)", category: "DS", desc: "데이터가 들어오고 나가는 순서에 따른 가장 기본적인 구조입니다. 재귀 호출(스택)이나 프로세스 스케줄링(큐)에 널리 활용됩니다." }
+        ];
+
+        const track = document.getElementById('sliderTrack');
+
+        function init() {
+            // 무한 루프를 위해 데이터를 두 세트(Clone) 생성하여 붙입니다.
+            const totalItems = [...csData, ...csData]; 
+            const totalCount = totalItems.length;
+
+            totalItems.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                
+                // z-index는 전체 아이템 개수에 맞춰 역순으로 설정하여 겹침 순서를 유지합니다.
+                card.style.zIndex = totalCount - index;
+                
+                card.onclick = () => openModal(item, index % 4);
+                card.innerHTML = `
+                    <div class="title">${item.title.replace(/\n/g, '<br>')}</div>
+                    <div class="category">${item.category}</div>
+                `;
+                track.appendChild(card);
+            });
+        }
+
+        function openModal(item, colorIdx) {
+            const overlay = document.getElementById('modalOverlay');
+            const windowObj = document.getElementById('modalWindow');
+            const colors = ['var(--pink)', 'var(--yellow)', 'var(--blue-light)', 'var(--blue-dark)'];
+            const textColors = ['white', 'black', 'black', 'white'];
+
+            document.getElementById('mTitle').innerText = item.title.replace('\n', ' ');
+            document.getElementById('mCategory').innerText = item.category;
+            document.getElementById('mDesc').innerText = item.desc;
+            windowObj.style.backgroundColor = colors[colorIdx];
+            windowObj.style.color = textColors[colorIdx];
+            
+            overlay.classList.add('active');
+            document.querySelector('.slider-track').style.animationPlayState = 'paused';
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+            document.querySelector('.slider-track').style.animationPlayState = 'running';
+        }
+
+        window.onclick = (e) => { if (e.target.id === 'modalOverlay') closeModal(); }
+        init();
+    </script>
+</body>
+</html>
