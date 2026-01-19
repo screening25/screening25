@@ -1,6 +1,7 @@
 // 기본값(default parameter) 설정 및 구조 분해 할당
 const Button = ({ children, text, color = "black" }) => {
   const onClickButton = (e) => {
+    // 이벤트 객체 
     console.log(e)
   //   console.log(text)
   }

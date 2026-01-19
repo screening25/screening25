@@ -1,28 +1,30 @@
 import './App.css'
-import Button from './components/Button.jsx'
-import Header from './components/Header.jsx'
+import { useState } from "react";
+
+const Bulb=({light})=>{
+  return <div>{light === "ON" ? <h1 style ={{backgroundColor:"orange"}}>ON</h1>:<h1 style = {{backgroundColor:"gray"}}>OFF</h1>}</div>
+}
 
 function App() {
-  const buttonProps = {
-    text: "Mail",
-    color: "red",
-    a: 1,
-    b: 2,
-    c: 3,
-  };
+  const [count, setCount] = useState(0); 
+  const [light, setLight] = useState("OFF"); // 초기값 대문자 통일
 
   return (
     <>
-      {/* 1. Spread Operator를 이용한 전달 */}
-      <Button {...buttonProps} />
-      
-      {/* 2. 일반적인 Props 전달 */}
-      <Button text={"Cafe"} />
-      
-      {/* 3. Children을 이용한 컴포넌트 합성 */}
-      <Button text={"Blog"}>
-        <Header />
-      </Button> 
+      <div>
+        <Bulb light = {light}/>
+        <button onClick={() => {
+          setLight(light === "ON" ? "OFF" : "ON");
+        }}>
+          {light === "ON"?"끄기":"켜기"}
+        </button>
+      </div>
+      <div>
+        <h1>{count}</h1>
+        <button onClick={() => {
+          setCount(count + 1);
+        }}>+</button>
+      </div>
     </>
   );
 }
