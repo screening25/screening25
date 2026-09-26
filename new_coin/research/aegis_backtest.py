@@ -53,15 +53,21 @@ def indicators(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def simulate(data: dict[str, pd.DataFrame], capital: float = 10_000_000):
+def simulate(data: dict[str, pd.DataFrame], capital: float = 10_000_000, breaker_reset: str = "never"):
+    """breaker_reset: "never" = 봇 원본(연속 3패 뒤 멈추면 재시작 전까지 안 풀린다)
+                      "trend" = BTC 추세 필터가 꺼졌다 다시 켜지면 연속 손실 수를 0으로 되돌린다"""
     data = {t: indicators(d) for t, d in data.items()}
     btc = data["KRW-BTC"]
     trend_ok = (btc.close.rolling(20).mean() > btc.close.rolling(60).mean()).shift().fillna(False)
     days = sorted(set().union(*[d.index for d in data.values()]))
     cash, pos, trades, losses, halted, equity = capital, {}, [], 0, False, []
 
+    prev_ok = False
     for day in days:
         ok = bool(trend_ok.get(day, False))
+        if breaker_reset == "trend" and ok and not prev_ok:
+            losses = 0
+        prev_ok = ok
         # 1) 보유분 청산
         for t in list(pos):
             d = data[t]
