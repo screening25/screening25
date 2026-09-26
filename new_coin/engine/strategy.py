@@ -24,6 +24,7 @@ class SwingTrendStrategy:
         self.df = None
         self.atr = 0
         self.dynamic_k = 0.5
+        self.last_exit = None  # 마지막 청산의 실제 체결가·수량. reset_position() 뒤에도 기록에 쓴다
 
     def get_market_data(self, interval="day", count=200):
         """Upbit API를 통해 시세 데이터를 수집하고 업데이트합니다."""
@@ -128,6 +129,13 @@ class SwingTrendStrategy:
     def execute_buy_order(self):
         """현금(KRW) 잔고를 확인하여 중복 매수를 방지하고 주문을 집행합니다."""
         try:
+            # 이미 이 코인을 들고 있으면 사지 않는다. 봇을 다시 켰을 때 동기화가 놓친 보유분에
+            # 같은 코인을 또 사던 문제(2026-01-04 04:25·04:30·04:35 중복 진입)를 막는다.
+            held = self.upbit.get_balance(self.ticker.split('-')[1])
+            if held is not None and float(held) * float(self.df['close'].iloc[-1]) > 5000:
+                print(f"[{self.ticker}] 이미 보유 중이라 매수하지 않습니다.")
+                return False
+
             balance = self.upbit.get_balance("KRW")
             if balance is None: return False
             
@@ -187,6 +195,7 @@ class SwingTrendStrategy:
                 # 실제 보유 수량으로 매도 집행 (self.amount 대신 실제 잔고 사용 시 더 안전)
                 result = self.upbit.sell_market_order(self.ticker, actual_coin_balance)
                 pnl_percent = 0.0
+                self.last_exit = {'price': None, 'qty': actual_coin_balance}
                 
                 if result and 'uuid' in result:
                     time.sleep(2)
@@ -197,6 +206,7 @@ class SwingTrendStrategy:
                         
                         if total_volume > 0:
                             exit_price = total_price_volume / total_volume
+                            self.last_exit = {'price': exit_price, 'qty': total_volume}
                             fee = 0.0005
                             pnl_percent = ((exit_price * (1 - fee)) - (self.entry_price * (1 + fee))) / (self.entry_price * (1 + fee)) * 100
                 
