@@ -36,6 +36,12 @@ portfolio_lock = threading.Lock()
 logs = ["Aegis V50 Nexus: 시스템 초기화 완료."]
 consecutive_losses = 0
 trading_halted = False
+# 청산한 날에는 같은 종목에 다시 들어가지 않는다. 돌파 조건이 하루 종일 참이라
+# 청산 2초 뒤 같은 가격에 다시 사던 문제(2026-01-05 ETH)를 막는다.
+exited_on = {}  # ticker -> 'YYYY-MM-DD'(한국 시간)
+
+def kst_today():
+    return time.strftime('%Y-%m-%d', time.gmtime(time.time() + 9 * 3600))
 
 # --- 추가: 자산 대비 75% 자동 계산 함수 ---
 def get_total_trading_budget(upbit_client, ratio=0.75):
@@ -106,8 +112,11 @@ def run_trading_logic():
             exit_reason = bot.check_exit_signal()
             if exit_reason:
                 pnl_percent = bot.execute_sell_order()
+                exited_on[ticker] = kst_today()
                 if pnl_percent is not None:
-                    db.log_trade(ticker, 'exit', bot.df['close'].iloc[-1], bot.amount, pnl_percent, exit_reason)
+                    # reset_position()이 수량을 0으로 지운 뒤라 bot.amount를 쓰면 0이 기록된다.
+                    fill = bot.last_exit or {}
+                    db.log_trade(ticker, 'exit', fill.get('price') or bot.df['close'].iloc[-1], fill.get('qty', 0.0), pnl_percent, exit_reason)
                     consecutive_losses = consecutive_losses + 1 if pnl_percent < 0 else 0
                     logs.append(f"[청산] {ticker} | 사유: {exit_reason} | 실현손익: {pnl_percent:.2f}%")
                     del portfolio[ticker]
@@ -127,6 +136,7 @@ def run_trading_logic():
         if len(portfolio) < MAX_SLOTS and not trading_halted:
             for ticker in TARGET_TICKERS:
                 if len(portfolio) >= MAX_SLOTS or ticker in portfolio: continue
+                if exited_on.get(ticker) == kst_today(): continue
 
                 bot = SwingTrendStrategy(upbit, ticker, TOTAL_CAPITAL, ACCOUNT_RISK_PERCENTAGE)
                 if not bot.get_market_data(interval="day"): continue
