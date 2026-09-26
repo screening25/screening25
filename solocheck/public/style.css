@@ -1,0 +1,24 @@
+:root { --bg:#1d1f22; --card:#2a2d31; --line:#3a3e43; --ink:#f2f3f4; --sub:#8e9093; --ok:#d7ff4f; --warn:#ffb020; --bad:#ff4d4f; --r:16px; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 -apple-system, "Pretendard", "Noto Sans KR", system-ui, sans-serif; }
+main { max-width:720px; margin:0 auto; padding:20px 16px 48px; }
+h1 { font-size:22px; margin:4px 0 2px; } h2 { font-size:17px; margin:28px 0 10px; color:var(--sub); font-weight:600; }
+.sub { color:var(--sub); font-size:14px; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:var(--r); padding:16px; margin:10px 0; }
+button, .btn { font:inherit; font-weight:700; border:0; border-radius:999px; padding:14px 22px; cursor:pointer; background:var(--line); color:var(--ink); text-decoration:none; display:inline-block; }
+button.primary { background:var(--ok); color:#111; } button.danger { background:var(--bad); color:#fff; }
+button.big { width:100%; padding:26px; font-size:24px; }
+button:disabled { opacity:.5; }
+input, select { font:inherit; width:100%; padding:12px; border-radius:12px; border:1px solid var(--line); background:#15171a; color:var(--ink); }
+label { display:block; margin:12px 0 6px; color:var(--sub); font-size:14px; }
+.row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.grow { flex:1; }
+.badge { display:inline-block; padding:3px 10px; border-radius:999px; font-size:13px; font-weight:700; }
+.s-ok { background:var(--ok); color:#111; } .s-due { background:var(--warn); color:#111; }
+.s-missed, .s-sos { background:var(--bad); color:#fff; } .s-missed_ack, .s-sos_ack { background:#7a2e2f; color:#fff; } .s-ended { background:var(--line); }
+.card.alert { border-color:var(--bad); box-shadow:0 0 0 2px var(--bad) inset; }
+.clock { font-size:44px; font-weight:800; font-variant-numeric:tabular-nums; margin:8px 0; }
+.mono { font-family:ui-monospace, Menlo, monospace; font-size:12px; color:var(--sub); word-break:break-all; }
+table { width:100%; border-collapse:collapse; font-size:14px; } td, th { padding:6px 4px; border-bottom:1px solid var(--line); text-align:left; }
+.hold { position:relative; overflow:hidden; } .hold .fill { position:absolute; inset:0; width:0; background:rgba(255,255,255,.25); transition:none; }
+td:first-child { white-space:nowrap; }
