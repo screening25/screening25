@@ -1,2 +1,0 @@
-{ "name": "솔로체크", "short_name": "솔로체크", "start_url": ".", "display": "standalone", "background_color": "#1d1f22", "theme_color": "#1d1f22",
-  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }] }
